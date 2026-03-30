@@ -1,0 +1,1317 @@
+///////////// Corrade Control Panel \\\\\\\\\\\\\\\
+//                                                //
+// This script acts as a bridge between Corrade  //
+// command and control scripts and Corrade bots  //
+//        https://slbotcontrol.github.io/         //
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+// Copyright (c) 2026 Truth & Beauty Lab          //
+// License: GNU General Public License version 3  //
+// All rights reserved.                           //
+//                                                //
+// Author: Missy Restless missyrestless@gmail.com //
+////////////////////////////////////////////////////
+
+string PRODUCT = "Corrade Control Panel™";
+string VERSION = "1.0.0";
+
+//////// LIFEBOTS COMMAND & CONTROL CODES \\\\\\\\
+// Setup and startup                            //
+integer BOT_SETUP_SETBOT            = 280101;   //
+integer BOT_STATUS_QUERY            = 280106;   //
+integer BOT_RESET_CONTROLPANEL      = 9997770;  //
+integer BOT_RESET_TOTALCONTROL      = 9997770;  //
+                                                //
+// Bot Status                                   //
+integer BOT_LOGIN                   = 280111;   //
+integer BOT_LOGOUT                  = 280112;   //
+integer BOT_LOCATION                = 290232;   //
+                                                //
+// Device Settings                              //
+integer BOT_SETUP_SETOPTIONS        = 280104;   //
+integer BOT_SETUP_DEVICENAME        = 280103;   //
+integer BOT_SETUP_DEBUG             = 280105;   //
+integer BOT_SETUP_DEBUG_SUCCESS     = 280107;   //
+integer BOT_SETUP_SETLINK           = 280102;   //
+                                                //
+// Communication commands                       //
+integer BOT_SAY_CHAT                = 280121;   //
+integer BOT_INSTANT_MESSAGE         = 280122;   //
+integer BOT_SAY_GROUP_CHAT          = 280123;   //
+integer BOT_SEND_NOTICE             = 280124;   //
+integer BOT_OFFER_TELEPORT          = 290226;   //
+integer BOT_LISTEN_LOCAL_CHAT       = 280125;   //
+integer BOT_LISTEN_IM               = 280126;   //
+                                                //
+// Movement                                     //
+integer BOT_WALK                    = 280131;   //
+integer BOT_WALKTO                  = 280132;   //
+integer BOT_TELEPORT                = 280133;   //
+integer BOT_FLY                     = 280134;   //
+integer BOT_SIT                     = 290214;   //
+integer BOT_STAND                   = 290217;   //
+                                                //
+// Group Management                             //
+integer BOT_LIST_GROUPS             = 280144;   //
+integer BOT_LIST_GROUP_ROLES        = 290227;   //
+integer BOT_GROUP_JOIN              = 280145;   //
+integer BOT_GROUP_LEAVE             = 280146;   //
+integer BOT_ACTIVATE_GROUP          = 290215;   //
+integer BOT_GROUP_SET_ROLE          = 290228;   //
+integer BOT_GROUP_INVITE            = 280156;   //
+integer BOT_GROUP_EJECT             = 280157;   //
+integer BOT_SELECT_GROUP_TAG        = 290216;   //
+                                                //
+// Friendship                                   //
+integer BOT_OFFER_FRIENDSHIP        = 280147;   //
+integer BOT_UNFRIEND                = 280160;   //
+integer BOT_FRIENDSHIP_CAN_EDIT     = 290229;   //
+integer BOT_FRIENDSHIP_SEE_ONLINE   = 290230;   //
+integer BOT_FRIENDSHIP_SEE_ON_MAP   = 290231;   //
+                                                //
+// Money and Inventory                          //
+integer BOT_LISTEN_INVENTORY_OFFER  = 280141;   //
+integer BOT_LISTEN_MONEY_PAYMENTS   = 280142;   //
+integer BOT_GIVE_INVENTORY          = 280150;   //
+integer BOT_GIVE_MONEY              = 280151;   //
+integer BOT_GIVE_MONEY_OBJECT       = 290225;   //
+integer BOT_GET_BALANCE             = 280152;   //
+integer BOT_INVENTORY_DELETE        = 290234;   //
+integer BOT_NOTECARD_CREATE         = 290235;   //
+integer BOT_NOTECARD_EDIT           = 290236;   //
+integer BOT_NOTECARD_READ           = 290237;   //
+                                                //
+// Bot Appearance                               //
+integer BOT_WEAR                    = 280155;   //
+integer BOT_TAKEOFF                 = 290223;   //
+integer BOT_REBAKE                  = 290222;   //
+integer BOT_ATTACHMENTS             = 280153;   //
+                                                //
+// Sim Management                               //
+integer BOT_SIM_RESTART_START       = 280158;   //
+integer BOT_SIM_RESTART_STOP        = 280159;   //
+integer BOT_SIM_SEND_MESSAGE        = 290218;   //
+integer BOT_SIM_KICK                = 290219;   //
+integer BOT_SIM_ACCESS              = 290220;   //
+integer BOT_SIM_ACCESS_ALL_ESTATES  = 290221;   //
+                                                //
+// Misc. commands                               //
+integer BOT_LISTEN_DIALOG           = 280143;   //
+integer BOT_TOUCH_OBJECT            = 280148;   //
+integer BOT_ATTACHMENT_OBJECT       = 280149;   //
+integer BOT_DIALOG_REPLY            = 280154;   //
+                                                //
+// Events                                       //
+integer BOT_SETUP_SUCCESS           = 280201;   //
+integer BOT_SETUP_FAILED            = 280202;   //
+integer BOT_COMMAND_FAILED          = 280203;   //
+integer BOT_EVENT_LISTEN_LOCAL_CHAT = 280204;   //
+integer BOT_EVENT_LISTEN_IM         = 280205;   //
+integer BOT_EVENT_LISTEN_INVENTORY  = 280206;   //
+integer BOT_EVENT_LISTEN_MONEY      = 280207;   //
+integer BOT_EVENT_LISTEN_SUCCESS    = 280208;   //
+integer BOT_EVENT_STATUS_REPLY      = 280209;   //
+integer BOT_LIST_GROUPS_REPLY       = 280210;   //
+integer BOT_LIST_GROUP_ROLES_REPLY  = 290224;   //
+integer BOT_GET_BALANCE_REPLY       = 280211;   //
+integer BOT_EVENT_LISTEN_DIALOG     = 280212;   //
+integer BOT_ATTACHMENTS_REPLY       = 280213;   //
+integer BOT_LOCATION_REPLY          = 290233;   //
+integer BOT_NOTECARD_READ_REPLY     = 290238;   //
+integer BOT_NOTECARD_CREATE_REPLY   = 290239;   //
+                                                //
+// Corrade API Extensions                      //
+//
+// Avatar Operations
+integer ADJUST_HOVER_HEIGHT         = 299005;   //
+integer AVATAR_INFO                 = 299022;   //
+integer AVATAR_DISPLAY_NAME         = 299023;   //
+integer AVATAR_PICKS                = 299024;   //
+integer AVATAR_GROUPS               = 299025;   //
+integer AVATAR_GROUPS_MATCH         = 299026;   //
+integer AVATAR_GROUPS_SKIP          = 299027;   //
+integer AVATAR_GROUPS_MATCH_SKIP    = 299028;   //
+integer SCAN_AVATARS                = 299021;   //
+integer UUID_TO_NAME                = 299021;   //
+integer NAME_TO_UUID                = 299021;   //
+// Communication
+integer INVENTORY_OFFER_ACCEPT      = 299999;   //
+integer TELEPORT_OFFER_ACCEPT       = 299033;   //
+integer TELEPORT_OFFER_DECLINE      = 299034;   //
+// Group Management
+integer ACTIVATE_ROLE               = 299002;   //
+integer GROUP_INFO                  = 299013;   //
+integer GROUP_VISIBILITY            = 299016;   //
+integer GROUP_OFFER_ACCEPT          = 299017;   //
+integer GROUP_OFFER_DECLINE         = 299018;   //
+integer LIST_GROUPS_UUID            = 299014;   //
+integer LIST_GROUPS_NAME            = 299015;   //
+integer LIST_GROUP_MEMBERS          = 299000;   //
+// Inventory Management
+integer LIST_INVENTORY              = 299001;   //
+integer LIST_OUTFITS                = 299006;   //
+integer WEAR_OUTFIT                 = 299007;   //
+integer GET_WORN_OUTFIT             = 299008;   //
+integer INVENTORY_TO_OBJECT         = 299004;   //
+// Object Interaction
+integer TAKE_DELETE_OBJECT          = 299003;   //
+integer FIND_OBJECTS                = 299009;   //
+integer FIND_OBJECTS_WITH_PROP      = 299010;   //
+integer FIND_OBJECTS_PARCEL         = 299011;   //
+integer FIND_OBJECT_UUID            = 299012;   //
+// Movement Commands
+integer ALWAYS_RUN                  = 299019;   //
+integer ALWAYS_WALK                 = 299020;   //
+// Simulator/Parcel Management
+integer SIM_RETURN_OBJECTS          = 299029;   //
+integer SIM_RETURN_SCRIPTED_OBJECTS = 299030;   //
+integer SIM_RETURN_OTHERS_OBJECTS   = 299031;   //
+integer REGION_INFO                 = 299032;   //
+// Body of response to parse
+integer BOT_RESPONSE                = 300000;   //
+// Success/Failure/State codes
+integer NOTECARD_DONE               = 300001;   // 
+integer BOT_SETUP_RETRY             = 300002;   //
+// TODO: return codes for success or failure    //
+//////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// Corrade Control Panel Command & Control Bridge
+//////////////////////////////////////////////////
+
+string API_URL = "https://api.lifebots.cloud/api/bot.html";
+string API_KEY = "";
+string BOT_NAME = "";
+string BOT_SECRET = "";
+
+string DEVICE_NAME = "";
+string LOGIN_SITON = "";
+
+string WEBHOOK_URL = "";
+key urlRequestId = NULL_KEY;
+key selfCheckRequestId = NULL_KEY;
+
+// Configuration Notecard
+string CONFIG_CARD = "Configuration";
+integer NotecardLine;
+integer NotecardDone = 0;
+key QueryID;
+
+key ControlPanelOwner = NULL_KEY;
+
+// Corrade Control Panel sends events to LINK_SET by default
+// You can specify the exact link number of the prim to optimize performance
+integer LINK = LINK_SET;
+
+// Returned data type can be JSON or URLENCODE, default is JSON
+string DATATYPE = "JSON";
+
+// Whether to reset on change of object ownership, default is reset
+integer OWNERCHANGE_RESET = 1;
+
+// Whether to send result to Owner chat as well as back to the user script
+// By default the result body is only sent back to the script to parse
+integer OWNERSAY_RESULT = 0;
+
+// 0 = debug off, 1 = debug on
+integer LB_DEBUG = 0;
+
+// Send Corrade HTTP API commands
+CorradeAPI(string command, list params) {
+
+    list query;
+    if (LB_DEBUG == 1) {
+        llSay(DEBUG_CHANNEL, "API_KEY = " + API_KEY);
+        llSay(DEBUG_CHANNEL, "BOT_NAME = " + BOT_NAME);
+        llSay(DEBUG_CHANNEL, "BOT_SECRET = " + BOT_SECRET);
+        llSay(DEBUG_CHANNEL, "DATATYPE = " + DATATYPE);
+    }
+    // Populate the query data
+    if (DATATYPE == "URLENCODE") {
+        query = [
+            "action="  + command,
+            "apikey="  + llEscapeURL(API_KEY),
+            "botname=" + llEscapeURL(BOT_NAME),
+            "secret="  + llEscapeURL(BOT_SECRET)
+        ];
+    } else {
+        query = [
+            "action="  + command,
+            "apikey="  + llEscapeURL(API_KEY),
+            "botname=" + llEscapeURL(BOT_NAME),
+            "secret="  + llEscapeURL(BOT_SECRET),
+            "dataType=json"
+        ];
+    }
+
+    integer i;
+    for(i = 0; i<llGetListLength(params); i += 2) {
+        query += [ llList2String(params, i) + "=" + llEscapeURL(llList2String(params, i+1)) ];
+    }
+
+    string queryString = llDumpList2String(query, "&");
+
+    if (LB_DEBUG == 1) {
+        llSay(DEBUG_CHANNEL, "API_URL = " + API_URL);
+        llSay(DEBUG_CHANNEL, "queryString = " + queryString);
+    }
+ 
+    llHTTPRequest(API_URL, [HTTP_METHOD,"POST"], queryString);
+}
+
+// Function to convert a string to a boolean (case-insensitive, basic values)
+// Usage examples:
+//   string input1 = "TRUE";
+//   string input2 = "fAlSe";
+//   boolean bool1 = stringToBoolean(input1); // bool1 becomes TRUE
+//   boolean bool2 = stringToBoolean(input2); // bool2 becomes FALSE
+integer stringToBoolean(string str) {
+    string lowerStr = llToLower(str); // Convert to lowercase for case-insensitivity
+    if (lowerStr == "true" || lowerStr == "yes" || lowerStr == "on" || lowerStr == "1") {
+        return TRUE;
+    } else {
+        return FALSE; // Handles "false", "no", "off", "0", "" and any other string
+    }
+}
+
+api_key_not_set() {
+    llOwnerSay("ERROR: LB_API_KEY not set.");
+    llOwnerSay("Edit the Configuration notecard to set your Corrade API Key.");
+}
+ 
+request_secure_url() {
+    if (WEBHOOK_URL != "") {
+        llReleaseURL(WEBHOOK_URL);
+    }
+    WEBHOOK_URL = "";
+ 
+    urlRequestId = llRequestSecureURL();
+}
+ 
+throw_exception(string inputString) {
+    ControlPanelOwner = llGetOwner();
+    llInstantMessage(ControlPanelOwner, inputString);
+}
+
+// Convert HTTP response in URL encoded format to JSON
+string resultToJson(string bodyResult) {
+    string decoded_body = llUnescapeURL(bodyResult);
+    // The body will typically be in the format "var1=value1&var2=value2"
+    list pairs = llParseString2List(decoded_body, ["&"], []);
+    integer pairsLength = llGetListLength(pairs);
+    integer lastPair = pairsLength - 1;
+    string jsonResult = "{";
+    // Not sure if this catches all nested lists, maybe only top level key/value pairs
+    // People should just use JSON as the HTTP response format but we support URL encoded
+    // responses in order to provide backward compatibility with TotalControl scripts.
+    integer i;
+    for (i = 0; i < pairsLength; i++)
+    {
+        list kvp = llParseString2List(llList2String(pairs, i), ["="], []);
+        string lky = llList2String(kvp, 0);
+        string value = llList2String(kvp, 1);
+        // llOwnerSay("Key: " + lky + ", Value: " + value);
+        if (i == lastPair) {
+            jsonResult = jsonResult + "\"" + lky + "\": \"" + value + "\"}";
+        } else {
+            jsonResult = jsonResult + "\"" + lky + "\": \"" + value + "\",";
+        }
+    }
+    return jsonResult;
+}
+
+processJsonResult(string jsonBody) {
+    string action = llJsonGetValue(jsonBody, ["action"]);
+    if (action == "bot_location") {
+        string region = llJsonGetValue(jsonBody, ["region"]);
+        string x = llJsonGetValue(jsonBody, ["x"]);
+        string y = llJsonGetValue(jsonBody, ["y"]);
+        string z = llJsonGetValue(jsonBody, ["z"]);
+        llMessageLinked(LINK, BOT_LOCATION_REPLY, region + "\n" + x + "\n" + y + "\n" + z, NULL_KEY);
+    } else if (action == "attachments") {
+        llMessageLinked(LINK, BOT_ATTACHMENTS_REPLY, llJsonGetValue(jsonBody, ["attachments"]), NULL_KEY);
+    } else if (action == "get_balance") {
+        llMessageLinked(LINK, BOT_GET_BALANCE_REPLY, llJsonGetValue(jsonBody, ["balance"]), NULL_KEY);
+    } else if (action == "status") {
+        llMessageLinked(LINK, BOT_EVENT_STATUS_REPLY, llJsonGetValue(jsonBody, ["status"]) + "\nexpiration date unknown", NULL_KEY);
+    } else if (action == "listgroups") {
+        llMessageLinked(LINK, BOT_LIST_GROUPS_REPLY, llJsonGetValue(jsonBody, ["groups"]), NULL_KEY);
+    } else if (action == "list_group_roles") {
+        llMessageLinked(LINK, BOT_LIST_GROUP_ROLES_REPLY, llJsonGetValue(jsonBody, ["roles"]), NULL_KEY);
+    } else if (action == "notecard_create") {
+        llMessageLinked(LINK, BOT_NOTECARD_CREATE_REPLY, "", (key)llJsonGetValue(jsonBody, ["uuid"]));
+    } else if (action == "notecard_read") {
+        llMessageLinked(LINK, BOT_NOTECARD_READ_REPLY, llJsonGetValue(jsonBody, ["text"]), NULL_KEY);
+    } else if (action == "set_http_callback") {
+        llMessageLinked(LINK, BOT_EVENT_LISTEN_SUCCESS, "", NULL_KEY);
+    }
+}
+
+default {
+ 
+    state_entry()
+    {
+         ControlPanelOwner = llGetOwner();
+         if (llGetInventoryType(CONFIG_CARD) == INVENTORY_NOTECARD) {
+             NotecardLine = 0;
+             QueryID = llGetNotecardLine(CONFIG_CARD, NotecardLine);
+         }
+         else {
+             if ((API_KEY == "") || (API_KEY == "your-api-key")) {
+                 api_key_not_set();
+                 // llSetScriptState(llGetScriptName(), FALSE);
+             } else {
+                 llOwnerSay("Configuration notecard missing, using defaults.");
+                 request_secure_url();
+             }
+         }
+    }
+
+    on_rez(integer param)
+    {
+         llResetScript();
+    }
+
+    changed(integer change)
+    {
+         if (OWNERCHANGE_RESET == 1) {
+             if (change & (CHANGED_OWNER | CHANGED_INVENTORY))
+             {
+                 llReleaseURL(WEBHOOK_URL);
+                 WEBHOOK_URL = "";
+ 
+                 llResetScript();
+             }
+         } else {
+             if (change & CHANGED_INVENTORY)
+             {
+                 llReleaseURL(WEBHOOK_URL);
+                 WEBHOOK_URL = "";
+ 
+                 llResetScript();
+             }
+         }
+         if (change & (CHANGED_REGION | CHANGED_REGION_START | CHANGED_TELEPORT))
+             request_secure_url();
+    }
+ 
+
+    dataserver( key queryid, string data )
+    {
+        list temp;
+        string name;
+        string value;
+        if ( queryid == QueryID ) {
+            if ((NotecardDone == 0) && (data != EOF)) {
+                if (data == "END_SETTINGS") {
+                    NotecardDone = 1;
+                    if ((API_KEY == "") || (API_KEY == "your-api-key")) {
+                        api_key_not_set();
+                        // llSetScriptState(llGetScriptName(), FALSE);
+                    } else {
+                        // Let everybody know we are done reading the Configuration notecard
+                        llMessageLinked(LINK, NOTECARD_DONE, "", "");
+                    }
+                } else if ( llGetSubString(data, 0, 0) != "#" && llStringTrim(data, STRING_TRIM) != "" ) {
+                    temp = llParseString2List(data, ["="], []);
+                    name = llStringTrim(llList2String(temp, 0), STRING_TRIM);
+                    value = llStringTrim(llList2String(temp, 1), STRING_TRIM);
+                    if ( value == "TRUE" ) value = "1";
+                    if ( value == "FALSE" ) value = "0";
+                    if ( name == "LB_API_KEY" ) {
+                        if (LB_DEBUG == 1) {
+                          llSay(DEBUG_CHANNEL, "Setting API Key to " + value);
+                        }
+                        API_KEY = value;
+                    } else if ( name == "LB_SECRET" ) {
+                        if (LB_DEBUG == 1) {
+                          llSay(DEBUG_CHANNEL, "Setting Bot Secret to " + value);
+                        }
+                        BOT_SECRET = value;
+                    } else if ( name == "LB_BOT_NAME" ) {
+                        if (LB_DEBUG == 1) {
+                          llSay(DEBUG_CHANNEL, "Setting Bot Name to " + value);
+                        }
+                        BOT_NAME = value;
+                    } else if ( name == "LOGIN_SITON" ) {
+                        LOGIN_SITON = value;
+                    } else if ( name == "DATATYPE" ) {
+                        if ((value == "URLENCODE") || (value == "JSON")) {
+                            DATATYPE = value;
+                        } else if (value == "urlencode") {
+                            DATATYPE = "URLENCODE";
+                        } else if (value == "json") {
+                            DATATYPE = "JSON";
+                        } else {
+                            llOwnerSay("WARNING: unsupported DATATYPE " + value + " specified in Configuration");
+                        }
+                    } else if ( name == "OWNERCHANGE_RESET" ) {
+                        OWNERCHANGE_RESET = (integer)value;
+                    } else if ( name == "OWNERSAY_RESULT" ) {
+                        OWNERSAY_RESULT = (integer)value;
+                    } else if ( name == "DEBUG" ) {
+                        LB_DEBUG = (integer)value;
+                    }
+                }
+                NotecardLine++;
+                QueryID = llGetNotecardLine( CONFIG_CARD, NotecardLine );
+            } else {
+                NotecardLine = 0;
+            }
+        }
+    }
+
+    http_request(key id, string method, string body)
+    {
+        integer responseStatus = 400;
+        string responseBody = "Unsupported method";
+        string action = "";
+        string amount = "";
+        string message = "";
+        string name = "";
+        string object = "";
+        string uuid = "";
+
+        if (LB_DEBUG == 1) {
+          llSay(DEBUG_CHANNEL, "In http_request():");
+          llSay(DEBUG_CHANNEL, llList2CSV([id, method, body]));
+        }
+
+        if (method == URL_REQUEST_DENIED) {
+            throw_exception("Error while attempting to get a free URL for this device:\n \n" + body);
+        } else if (method == URL_REQUEST_GRANTED) {
+            WEBHOOK_URL = body;
+            if (LB_DEBUG == 1) {
+                llSay(DEBUG_CHANNEL, "In http_request URL request granted, Webook URL = " + WEBHOOK_URL);
+            }
+            // Check every 5 mins for dropped URL
+            llSetTimerEvent(300.0);
+        } else if (method == "GET") {
+            responseStatus = 200;
+            responseBody = "Hello world!";
+            llHTTPResponse(id, responseStatus, responseBody);
+        } else if (method == "POST") {
+            responseStatus = 200;
+            action = llJsonGetValue(body, ["action"]);
+            if (action == "balance_update") {
+                if (llJsonGetValue(body, ["direction"]) == "INCOMING") {
+                    amount = llJsonGetValue(body, ["amount"]);
+                    uuid = llJsonGetValue(body, ["source"]);
+                    llMessageLinked(LINK, BOT_EVENT_LISTEN_MONEY, amount, (key)uuid);
+                }
+            } else if (action == "instant_message") {
+                name = llJsonGetValue(body, ["speaker_name"]);
+                if (name != "Second Life") {
+                    message = llJsonGetValue(body, ["message"]);
+                    uuid = llJsonGetValue(body, ["speaker_uuid"]);
+                    llMessageLinked(LINK, BOT_EVENT_LISTEN_IM, message, (key)uuid);
+                }
+            } else if (action == "chat_message") {
+                name = llJsonGetValue(body, ["speaker_name"]);
+                if (name != "Second Life") {
+                    message = llJsonGetValue(body, ["message"]);
+                    uuid = llJsonGetValue(body, ["speaker_uuid"]);
+                    llMessageLinked(LINK, BOT_EVENT_LISTEN_LOCAL_CHAT, message, (key)uuid);
+                }
+            } else if (action == "script_dialog") {
+                // TODO: In debug mode examine the args coming in and reverse engineer this
+                // Documentation for this is missing
+                // name = llJsonGetValue(body, ["sender_name"]);
+                // object = llJsonGetValue(body, ["object"]);
+                // message = llJsonGetValue(body, ["message"]);
+                // uuid = llJsonGetValue(body, ["sender_uuid"]);
+                // llMessageLinked(LINK, BOT_EVENT_LISTEN_DIALOG, name + ";" + object + ";" + message, (key)uuid);
+                llOwnerSay("body = " + body);
+            } else if (action == "offer_inventory") {
+                name = llJsonGetValue(body, ["sender_name"]);
+                object = llJsonGetValue(body, ["object"]);
+                message = llJsonGetValue(body, ["message"]);
+                uuid = llJsonGetValue(body, ["sender_uuid"]);
+                llMessageLinked(LINK, BOT_EVENT_LISTEN_INVENTORY, name + ";" + object + ";" + message, (key)uuid);
+            } else {
+                if (LB_DEBUG == 1) {
+                    llSay(DEBUG_CHANNEL, "Uncaught:");
+                    llSay(DEBUG_CHANNEL, llList2CSV([(string)id, method, body]));
+                }
+            }
+        } else if ((method == "PUT") || (method == "DELETE")) {
+            responseStatus = 403;
+            responseBody = "forbidden";
+            llHTTPResponse(id, responseStatus, responseBody);
+        }
+    }
+
+    timer()
+    {
+        selfCheckRequestId = llHTTPRequest(WEBHOOK_URL,
+                                [HTTP_METHOD, "GET", HTTP_VERBOSE_THROTTLE, FALSE,
+                                 HTTP_BODY_MAXLENGTH, 16384], "");
+    }
+
+    http_response(key request_id, integer status, list metadata, string body)
+    {
+        if (LB_DEBUG == 1) {
+            llSay(DEBUG_CHANNEL, "In http_response():");
+            llSay(DEBUG_CHANNEL, llList2CSV([request_id, status, body]));
+        }
+        if (request_id == selfCheckRequestId)
+        {
+            selfCheckRequestId = NULL_KEY;
+ 
+            if (status != 200)
+                request_secure_url();
+        } else if (request_id == NULL_KEY) {
+            throw_exception("Too many HTTP requests too fast!");
+        } else if (status == 200) {
+            llOwnerSay("✓ Success!");
+            if (OWNERSAY_RESULT == 1) {
+                llOwnerSay("Response: " + body);
+            }
+            // Return the response to the user script to parse
+            llMessageLinked(LINK, BOT_RESPONSE, body, NULL_KEY);
+            
+            // If Data Type is configured as URLENCODE then convert response to JSON
+            // Parse response for success or failure and process any events
+            string result;
+            string resulttext;
+            if (DATATYPE == "URLENCODE") {
+                if (llSubStringIndex(body, "result=OK") != -1) {
+                    llOwnerSay("✓ Command executed successfully");
+                    processJsonResult(resultToJson(body));
+                } else if (llSubStringIndex(body, "result=FAIL") != -1) {
+                    string jbod = resultToJson(body);
+                    result = llJsonGetValue(jbod, ["result"]);
+                    resulttext = llJsonGetValue(jbod, ["resulttext"]);
+                    llOwnerSay("✗ Command failed - check response");
+                    llMessageLinked(LINK, BOT_COMMAND_FAILED, result + "\n" + resulttext, NULL_KEY);
+                } else {
+                    llOwnerSay("✗ Unable to parse URLENCODE result: " + body);
+                }
+            } else {
+                result = llJsonGetValue(body, ["result"]);
+                if (result == "OK") {
+                    llOwnerSay("✓ Command executed successfully");
+                    processJsonResult(body);
+                } else if (llJsonGetValue( body, ["result"]) == "FAIL") {
+                    resulttext = llJsonGetValue(body, ["resulttext"]);
+                    llOwnerSay("✗ Command failed - check response");
+                    llMessageLinked(LINK, BOT_COMMAND_FAILED, result + "\n" + resulttext, NULL_KEY);
+                } else {
+                    llOwnerSay("✗ Unable to parse JSON result body: " + body);
+                    llOwnerSay("✗ result: " + result);
+                }
+            }
+        } else {
+            llOwnerSay("✗ HTTP Error: " + (string)status);
+            llMessageLinked(LINK, BOT_COMMAND_FAILED, (string)status + "\nHTTP Error", NULL_KEY);
+            if (OWNERSAY_RESULT == 1) {
+                llOwnerSay("Response: " + body);
+            }
+        }
+    }
+
+    link_message(integer sender, integer num, string message, key trigger)
+    {
+        if (LB_DEBUG == 1) {
+          llSay(DEBUG_CHANNEL, "In link_message():");
+          llSay(DEBUG_CHANNEL, llList2CSV([sender, num, message, trigger]));
+          //llSay(DEBUG_CHANNEL, "API Num = " + (string)num);
+          //llSay(DEBUG_CHANNEL, "Message = " + message);
+          //llSay(DEBUG_CHANNEL, "Trigger = " + (string)trigger);
+        }
+        // Setup and startup
+        if (num == BOT_SETUP_SETBOT) {
+            if (LB_DEBUG == 1) {
+              llSay(DEBUG_CHANNEL, "Setting Bot Name to " + message);
+            }
+            BOT_NAME = message;
+            if (LB_DEBUG == 1) {
+              llSay(DEBUG_CHANNEL, "Setting Bot Secret to " + (string)trigger);
+            }
+            BOT_SECRET = (string)trigger;
+            // TODO: Check Bot status and send bot setup success/failure link message
+            // Check_Bot_Status();
+            // CorradeAPI("status", [ ]);
+            // llMessageLinked(LINK, BOT_SETUP_FAILED, BOT_NAME, trigger);
+            if ((API_KEY == "") || (API_KEY == "your-api-key")) {
+                if (NotecardDone == 1) {
+                    api_key_not_set();
+                    llMessageLinked(LINK, BOT_SETUP_FAILED, BOT_NAME, trigger);
+                } else {
+                    llMessageLinked(LINK, BOT_SETUP_RETRY, BOT_NAME, trigger);
+                }
+            } else {
+                llMessageLinked(LINK, BOT_SETUP_SUCCESS, BOT_NAME, trigger);
+            }
+        } else if (num == BOT_SETUP_SETLINK) {
+            // TODO: validate this is a proper link number for the prim
+            llOwnerSay("Setting link number for llMessageLinked calls to: " + message);
+            LINK = (integer)message;
+        } else if (num == BOT_RESET_CONTROLPANEL) {
+            llOwnerSay("Resetting " + PRODUCT);
+            llResetScript();
+        // Bot Status
+        } else if (num == BOT_STATUS_QUERY) {
+            llOwnerSay("Sending bot status request...");
+            CorradeAPI("status", [ ]);
+        } else if (num == BOT_LOGIN) {
+            llOwnerSay("Sending bot login request...");
+            CorradeAPI("login", [ ]);
+        } else if (num == BOT_LOGOUT) {
+            llOwnerSay("Sending bot logout request...");
+            CorradeAPI("logout", [ ]);
+        } else if (num == BOT_LOCATION) {
+            llOwnerSay("Sending bot location request...");
+            CorradeAPI("bot_location", [ ]);
+        // Device Settings
+        } else if (num == BOT_SETUP_DEBUG) {
+            if (message == "1") {
+                LB_DEBUG = 1;
+            } else {
+                LB_DEBUG = 0;
+            }
+            llMessageLinked(LINK, BOT_SETUP_DEBUG_SUCCESS, "", "");
+        } else if (num == BOT_SETUP_DEVICENAME) {
+            DEVICE_NAME = message;
+        } else if (num == BOT_SETUP_SETOPTIONS) {
+            if (message == "DATATYPE_JSON") {
+                DATATYPE = "JSON";
+            } else if (message == "DATATYPE_URLENCODE") {
+                DATATYPE = "URLENCODE";
+            } else if (message == "NO_OWNERCHANGE_RESET") {
+                OWNERCHANGE_RESET = 0;
+            } else if (message == "OWNERCHANGE_RESET") {
+                OWNERCHANGE_RESET = 1;
+            }
+        // Communication commands
+        } else if (num == BOT_LISTEN_LOCAL_CHAT) {
+            if (WEBHOOK_URL == "") {
+                request_secure_url();
+            } else {
+                llOwnerSay("Sending bot listen chat request...");
+                CorradeAPI("set_http_callback", [
+                  "url", WEBHOOK_URL,
+                  "events", "chat_message",
+                  "operation", "add"
+                ]);
+            }
+        } else if (num == BOT_LISTEN_IM) {
+            if (WEBHOOK_URL == "") {
+                request_secure_url();
+            } else {
+                llOwnerSay("Sending bot listen IM request...");
+                CorradeAPI("set_http_callback", [
+                  "url", WEBHOOK_URL,
+                  "events", "instant_message",
+                  "operation", "add"
+                ]);
+            }
+        } else if (num == BOT_SAY_CHAT) {
+            llOwnerSay("Sending bot say chat request...");
+            CorradeAPI("say_chat_channel", [
+              "channel", "0",
+              "message", message
+            ]);
+        } else if (num == BOT_INSTANT_MESSAGE) {
+            llOwnerSay("Sending bot instant message request...");
+            CorradeAPI("im", [
+              "slname", (string)trigger,
+              "message", message
+            ]);
+        } else if (num == BOT_SAY_GROUP_CHAT) {
+            llOwnerSay("Sending bot say group chat request...");
+            CorradeAPI("send_group_im", [
+              "groupuuid", (string)trigger,
+              "message", message
+            ]);
+        } else if (num == BOT_SEND_NOTICE) {
+            // Split the message parameter into list
+            list msgstr=llParseString2List(message,["\n"],[]);
+            // The first line is the subject, the second line is the text
+            string SUBJECT = llList2String(msgstr,0);
+            string TEXT = llList2String(msgstr,1);
+            llOwnerSay("Sending bot send notice request...");
+            CorradeAPI("send_notice", [
+              "groupuuid", (string)trigger,
+              "subject", SUBJECT,
+              "text", TEXT
+            ]);
+        // Movement
+        } else if (num == ALWAYS_RUN) {
+            llOwnerSay("Sending bot always run request...");
+            CorradeAPI("alwaysRun", [ ]);
+        } else if (num == ALWAYS_WALK) {
+            llOwnerSay("Sending bot always walk request...");
+            CorradeAPI("alwaysWalk", [ ]);
+        } else if (num == SCAN_AVATARS) {
+            llOwnerSay("Sending bot scan nearby avatars request...");
+            if (((string)((integer)message) == message) || ((string)((float)message) == message)) {
+                CorradeAPI("nearbyavatars_scan", [
+                  "radius", (float)message
+                ]);
+            } else {
+                CorradeAPI("nearbyavatars_scan", [ ]);
+            }
+        } else if (num == BOT_SIT) {
+            llOwnerSay("Sending bot sit request...");
+            CorradeAPI("sit", [
+              "uuid", (string)trigger,
+              "save", message
+            ]);
+        } else if (num == BOT_STAND) {
+            llOwnerSay("Sending bot stand request...");
+            CorradeAPI("stand", [ ]);
+        } else if (num == BOT_FLY) {
+            llOwnerSay("Sending bot fly request...");
+            CorradeAPI("fly", [
+              "fly", message
+            ]);
+        } else if (num == BOT_TELEPORT) {
+            llOwnerSay("Sending bot teleport request...");
+            CorradeAPI("teleport", [
+              "location", message
+            ]);
+        } else if (num == BOT_WALK) {
+        // TODO: validate instruction is one of FORWARD, BACKWARD, LEFT, RIGHT, TURNLEFT, TURNRIGHT, FLY, or STOP
+        // TODO: validate param1 is one of START or STOP (not needed for STOP instruction)
+            llOwnerSay("Sending bot walk request...");
+            CorradeAPI("move", [
+              "instruction", message,
+              "param1", (string)trigger
+            ]);
+        } else if (num == BOT_WALKTO) {
+            llOwnerSay("Sending bot walk to request...");
+            CorradeAPI("walkto", [
+              "coords", message
+            ]);
+        // Group Management
+        // TODO: BOT_SELECT_GROUP_TAG
+        } else if (num == BOT_LIST_GROUPS) {
+            llOwnerSay("Sending bot group list request...");
+            CorradeAPI("listgroups", [ ]);
+        } else if (num == BOT_LIST_GROUP_ROLES) {
+            llOwnerSay("Sending bot list group roles request...");
+            CorradeAPI("list_group_roles", [
+              "groupuuid", (string)trigger
+            ]);
+        } else if (num == BOT_GROUP_JOIN) {
+            llOwnerSay("Sending bot group join request...");
+            CorradeAPI("group_join", [
+              "groupuuid", (string)trigger
+            ]);
+        } else if (num == BOT_GROUP_LEAVE) {
+            llOwnerSay("Sending bot group leave request...");
+            CorradeAPI("group_leave", [
+              "groupuuid", (string)trigger
+            ]);
+        } else if (num == BOT_ACTIVATE_GROUP) {
+            llOwnerSay("Sending bot activate group request...");
+            CorradeAPI("activate_group", [
+              "groupuuid", (string)trigger
+            ]);
+        } else if (num == ACTIVATE_ROLE) {
+            llOwnerSay("Sending bot activate group role request...");
+            CorradeAPI("activate_role", [
+              "groupuuid", (string)trigger,
+              "roleuuid", message
+            ]);
+        } else if (num == BOT_GROUP_SET_ROLE) {
+            // Split the message parameter into list
+            list rolestr=llParseString2List(message,[","],[]);
+            // The first line is the group id, the second line is the role id
+            string grpuuid = llList2String(rolestr,0);
+            string roluuid = llList2String(rolestr,1);
+            llOwnerSay("Sending bot set group role request...");
+            CorradeAPI("setrole", [
+              "groupuuid", grpuuid,
+              "roleuuid", roluuid,
+              "member", (string)trigger
+            ]);
+        } else if (num == BOT_GROUP_EJECT) {
+            llOwnerSay("Sending bot group eject request...");
+            CorradeAPI("group_eject", [
+              "groupuuid", (string)trigger,
+              "avatar", message
+            ]);
+        } else if (num == BOT_GROUP_INVITE) {
+            // Split the message parameter into list
+            list msgstr=llParseString2List(message,["\n"],[]);
+            // The first line is the group id, the second line is the role id
+            string GROUPUUID = llList2String(msgstr,0);
+            string ROLEUUID = llList2String(msgstr,1);
+
+            llOwnerSay("Sending group_invite request...");
+            CorradeAPI("group_invite", [
+              "avatar", (string)trigger,
+              "groupuuid", GROUPUUID,
+              "roleuuid", ROLEUUID
+            ]);
+        // Avatar / Friendship
+        } else if (num == AVATAR_DISPLAY_NAME) {
+            llOwnerSay("Sending bot avatar display name request...");
+            CorradeAPI("getDisplayName", [
+              "uuid", (string)trigger
+            ]);
+        } else if (num == BOT_OFFER_TELEPORT) {
+            llOwnerSay("Sending bot offer teleport request...");
+            CorradeAPI("offer_teleport", [
+              "avatar", (string)trigger,
+              "message", message
+            ]);
+        } else if (num == TELEPORT_OFFER_ACCEPT) {
+            llOwnerSay("Sending teleport offer accept request...");
+            CorradeAPI("teleport_offer_accept", [
+              "session_id", (string)trigger,
+              "accept", "1"
+            ]);
+        } else if (num == TELEPORT_OFFER_DECLINE) {
+            llOwnerSay("Sending teleport offer decline request...");
+            CorradeAPI("teleport_offer_accept", [
+              "session_id", (string)trigger,
+              "accept", "0"
+            ]);
+        } else if (num == AVATAR_PICKS) {
+            llOwnerSay("Sending bot avatar picks request...");
+            CorradeAPI("avatar_picks", [
+              "avatar", (string)trigger
+            ]);
+        } else if (num == AVATAR_GROUPS) {
+            llOwnerSay("Sending bot avatar groups request...");
+            CorradeAPI("avatar_groups", [
+              "avatar", (string)trigger
+            ]);
+        } else if (num == AVATAR_GROUPS_MATCH) {
+            llOwnerSay("Sending bot avatar groups match request...");
+
+            CorradeAPI("avatar_groups", [
+              "avatar", (string)trigger,
+              "matchnames", message
+            ]);
+        } else if (num == AVATAR_GROUPS_SKIP) {
+            llOwnerSay("Sending bot avatar groups skip request...");
+
+            CorradeAPI("avatar_groups", [
+              "avatar", (string)trigger,
+              "skipnames", message
+            ]);
+        } else if (num == AVATAR_GROUPS_MATCH_SKIP) {
+            llOwnerSay("Sending bot avatar groups match and skip request...");
+            // Split the message parameter into list
+            list matstr=llParseString2List(message,["\n"],[]);
+            // The first line is the match names param, the second line is the skip names param
+            string MATCHNAMES = llList2String(matstr,0);
+            string SKIPNAMES = llList2String(matstr,1);
+
+            CorradeAPI("avatar_groups", [
+              "avatar", (string)trigger,
+              "matchnames", MATCHNAMES,
+              "skipnames", SKIPNAMES
+            ]);
+        } else if (num == AVATAR_INFO) {
+            llOwnerSay("Sending bot avatar profile info request...");
+            CorradeAPI("avatar_info", [
+              "avatar", (string)trigger
+            ]);
+        } else if (num == BOT_UNFRIEND) {
+            llOwnerSay("Sending bot unfriend request...");
+            CorradeAPI("cancel_friendship", [
+              "slkey", (string)trigger
+            ]);
+        } else if (num == BOT_FRIENDSHIP_CAN_EDIT) {
+            llOwnerSay("Sending bot friendship can edit request...");
+            CorradeAPI("edit_friendship", [
+              "slkey", (string)trigger,
+              "can_edit", message
+            ]);
+        } else if (num == BOT_FRIENDSHIP_SEE_ONLINE) {
+            llOwnerSay("Sending bot friendship see online request...");
+            CorradeAPI("edit_friendship", [
+              "slkey", (string)trigger,
+              "see_online", message
+            ]);
+        } else if (num == BOT_FRIENDSHIP_SEE_ON_MAP) {
+            llOwnerSay("Sending bot friendship see on map request...");
+            CorradeAPI("edit_friendship", [
+              "slkey", (string)trigger,
+              "see_on_map", message
+            ]);
+        } else if (num == BOT_OFFER_FRIENDSHIP) {
+            llOwnerSay("Sending bot offer friendship request...");
+            CorradeAPI("offer_friendship", [
+              "avatar", (string)trigger,
+              "message", message
+            ]);
+        } else if (num == BOT_LISTEN_INVENTORY_OFFER) {
+            if (WEBHOOK_URL == "") {
+                request_secure_url();
+            } else {
+                llOwnerSay("Sending bot listen inventory offer request...");
+                CorradeAPI("set_http_callback", [
+                  "url", WEBHOOK_URL,
+                  "events", "offer_inventory",
+                  "operation", "add"
+                ]);
+            }
+        } else if (num == INVENTORY_OFFER_ACCEPT) {
+            // TODO: inventory_offer_accept is not documented
+            // Remove these two lines after debugging and figuring out the args
+            llOwnerSay("INVENTORY_OFFER_ACCEPT message = " + message);
+            llOwnerSay("INVENTORY_OFFER_ACCEPT trigger = " + (string)trigger);
+            // Split the message parameter into list
+            list offstr=llParseString2List(message,[";"],[]);
+            string i_offer_type = llList2String(offstr,0);
+            string i_object = llList2String(offstr,1);
+            string i_sender = llList2String(offstr,2);
+            //string i_folder = llList2String(offstr,3);
+            llOwnerSay("Sending bot inventory offer accept request...");
+            CorradeAPI("inventory_offer_accept", [
+                "offer_type", i_offer_type,
+                "object", i_object,
+                "sender_uuid", i_sender,
+                //"folder", i_folder,
+                "session", (string)trigger,
+                "accept", 1
+            ]);
+        // TODO: cannot get this to trigger in my tests
+        } else if (num == BOT_LISTEN_DIALOG) {
+            if (WEBHOOK_URL == "") {
+                request_secure_url();
+            } else {
+                llOwnerSay("Sending bot listen dialog request...");
+                CorradeAPI("set_http_callback", [
+                  "url", WEBHOOK_URL,
+                  "events", "script_dialog",
+                  "operation", "add"
+                ]);
+            }
+        // Money
+        } else if (num == BOT_LISTEN_MONEY_PAYMENTS) {
+            if (WEBHOOK_URL == "") {
+                request_secure_url();
+            } else {
+                llOwnerSay("Sending bot listen money payments request...");
+                CorradeAPI("set_http_callback", [
+                  "url", WEBHOOK_URL,
+                  "events", "balance_changed",
+                  "operation", "add"
+                ]);
+            }
+        } else if (num == BOT_GIVE_MONEY_OBJECT) {
+            llOwnerSay("Sending bot give money object request...");
+            CorradeAPI("give_money_object", [
+              "object_uuid", (string)trigger,
+              "amount", (integer)message
+            ]);
+        } else if (num == BOT_GIVE_MONEY) {
+            llOwnerSay("Sending bot give money request...");
+            CorradeAPI("give_money", [
+              "avatar", (string)trigger,
+              "amount", (integer)message
+            ]);
+        } else if (num == BOT_GET_BALANCE) {
+            llOwnerSay("Sending bot get balance request...");
+            CorradeAPI("get_balance", [ ]);
+        // Inventory
+        } else if (num == BOT_NOTECARD_EDIT) {
+            llOwnerSay("Sending bot notecard edit request...");
+            CorradeAPI("notecard_edit", [
+              "uuid", (string)trigger,
+              "text", message
+            ]);
+        } else if (num == BOT_NOTECARD_READ) {
+            llOwnerSay("Sending bot notecard read request...");
+            CorradeAPI("notecard_read", [
+              "uuid", (string)trigger
+            ]);
+        } else if (num == BOT_NOTECARD_CREATE) {
+            llOwnerSay("Sending bot notecard create request...");
+            CorradeAPI("notecard_create", [
+              "name", (string)trigger,
+              "text", message
+            ]);
+        } else if (num == BOT_INVENTORY_DELETE) {
+            llOwnerSay("Sending bot inventory delete request...");
+            CorradeAPI("inventory_delete", [
+              "uuid", (string)trigger
+            ]);
+        } else if (num == BOT_GIVE_INVENTORY) {
+            llOwnerSay("Sending bot give inventory request...");
+            CorradeAPI("give_inventory", [
+              "avatar", (string)trigger,
+              "object", message
+            ]);
+        // Bot Appearance
+        } else if (num == BOT_ATTACHMENTS) {
+            llOwnerSay("Sending bot attachments request...");
+            CorradeAPI("attachments", [ ]);
+        } else if (num == BOT_REBAKE) {
+            llOwnerSay("Sending bot rebake request...");
+            CorradeAPI("rebake", [ ]);
+        } else if (num == BOT_WEAR) {
+            llOwnerSay("Sending bot wear inventory item request...");
+            CorradeAPI("wear", [
+              "uuid", (string)trigger,
+              "wear", message
+            ]);
+        } else if (num == BOT_TAKEOFF) {
+            llOwnerSay("Sending bot remove worn item request...");
+            CorradeAPI("takeoff", [
+              "uuid", (string)trigger
+            ]);
+        // Sim Management
+        // TODO: BOT_SIM_ACCESS_ALL_ESTATES
+        } else if (num == REGION_INFO) {
+            llOwnerSay("Sending region info request...");
+            CorradeAPI("region_info", [ ]);
+        } else if (num == SIM_RETURN_OBJECTS) {
+            llOwnerSay("Sending sim return objects request...");
+            if (message == "all_estates") {
+                CorradeAPI("sim_return", [
+                  "avatar", (string)trigger,
+                  "all_estates", 1
+                ]);
+            } else {
+                CorradeAPI("sim_return", [
+                  "avatar", (string)trigger
+                ]);
+            }
+        } else if (num == SIM_RETURN_SCRIPTED_OBJECTS) {
+            llOwnerSay("Sending sim return scripted objects request...");
+            if (message == "all_estates") {
+                CorradeAPI("sim_return", [
+                  "avatar", (string)trigger,
+                  "scripted", 1,
+                  "all_estates", 1
+                ]);
+            } else {
+                CorradeAPI("sim_return", [
+                  "avatar", (string)trigger,
+                  "scripted", 1
+                ]);
+            }
+        } else if (num == SIM_RETURN_OTHERS_OBJECTS) {
+            llOwnerSay("Sending sim return others objects request...");
+            if (message == "all_estates") {
+                CorradeAPI("sim_return", [
+                  "avatar", (string)trigger,
+                  "others", 1,
+                  "all_estates", 1
+                ]);
+            } else {
+                CorradeAPI("sim_return", [
+                  "avatar", (string)trigger,
+                  "others", 1
+                ]);
+            }
+        } else if (num == BOT_SIM_ACCESS) {
+            llOwnerSay("Sending bot sim access request...");
+            CorradeAPI("sim_access", [
+              "avatar", (string)trigger,
+              "operation", message
+            ]);
+        } else if (num == BOT_SIM_SEND_MESSAGE) {
+            llOwnerSay("Sending bot sim send message request...");
+            CorradeAPI("sim_send_message", [
+              "message", message
+            ]);
+        } else if (num == BOT_SIM_RESTART_START) {
+            llOwnerSay("Sending bot sim restart request...");
+            CorradeAPI("sim_send_message", [
+              "message", "Restarting simulator in " + message + " seconds!"
+            ]);
+            CorradeAPI("sim_restart", [
+              "state", "schedule",
+              "delay", (integer)message
+            ]);
+        } else if (num == BOT_SIM_RESTART_STOP) {
+            llOwnerSay("Sending bot sim cancel restart request...");
+            CorradeAPI("sim_send_message", [
+              "message", "Cancelling simulator restart"
+            ]);
+            CorradeAPI("sim_restart", [
+              "state", "cancel",
+              "delay", 0
+            ]);
+        } else if (num == BOT_SIM_KICK) {
+            llOwnerSay("Sending bot sim kick request...");
+            CorradeAPI("sim_kick", [
+              "avatar", (string)trigger
+            ]);
+        // Miscellaneous commands
+        } else if (num == BOT_DIALOG_REPLY) {
+            // Split the message parameter into list
+            list repstr=llParseString2List(message,["\n"],[]);
+            // The first line is the channel, the second line is the button text
+            string CHANNEL = llList2String(repstr,0);
+            string BUTTON = llList2String(repstr,1);
+            llOwnerSay("Sending bot reply dialog request...");
+            CorradeAPI("reply_dialog", [
+              "object", (string)trigger,
+              "channel", CHANNEL,
+              "button", BUTTON
+            ]);
+        } else if (num == BOT_TOUCH_OBJECT) {
+            llOwnerSay("Sending bot touch object request...");
+            CorradeAPI("touch_prim", [
+              "uuid", (string)trigger
+            ]);
+        } else if (num == BOT_ATTACHMENT_OBJECT) {
+            llOwnerSay("Sending bot touch attachment request...");
+            CorradeAPI("touch_attachment", [
+              "objectname", message
+            ]);
+        // Corrade API Extensions
+        // TODO: object search needs guidance on interface
+        } else if (num == NAME_TO_UUID) {
+            llOwnerSay("Sending display name to UUID request...");
+            CorradeAPI("name2key", [
+              "name", message
+            ]);
+        } else if (num == UUID_TO_NAME) {
+            llOwnerSay("Sending UUID to display name request...");
+            if ((message == "0") || (message == "1")) {
+                CorradeAPI("key2name", [
+                  "key", (string)trigger,
+                  "request_case", message
+                ]);
+            } else {
+                CorradeAPI("key2name", [
+                  "key", (string)trigger
+                ]);
+            }
+        } else if (num == FIND_OBJECTS) {
+            integer range = 96;
+            if (message != "") {
+                range = (integer)message;
+            }
+            llOwnerSay("Sending bot find objects request...");
+            CorradeAPI("find_objects", [
+              "range", range
+            ]);
+        } else if (num == FIND_OBJECTS_WITH_PROP) {
+            integer prop = 96;
+            if (message != "") {
+                prop = (integer)message;
+            }
+            llOwnerSay("Sending bot find objects with props request...");
+            CorradeAPI("find_objects", [
+              "range", prop,
+              "with_props", "1"
+            ]);
+        } else if (num == FIND_OBJECTS_PARCEL) {
+            llOwnerSay("Sending bot find objects parcel request...");
+            CorradeAPI("find_objects", [
+              "current_parcel", "1"
+            ]);
+        } else if (num == FIND_OBJECT_UUID) {
+            llOwnerSay("Sending bot find object uuid request...");
+            CorradeAPI("find_objects", [
+              "uuid", (string)trigger
+            ]);
+        // Groups
+        } else if (num == GROUP_OFFER_ACCEPT) {
+            llOwnerSay("Sending bot group offer accept request...");
+            CorradeAPI("group_offer_accept", [
+              "session_id", (string)trigger,
+              "avatar_uuid", message,
+              "accept", "1"
+            ]);
+        } else if (num == GROUP_OFFER_DECLINE) {
+            llOwnerSay("Sending bot group offer decline request...");
+            CorradeAPI("group_offer_accept", [
+              "session_id", (string)trigger,
+              "avatar_uuid", message,
+              "accept", "0"
+            ]);
+        } else if (num == GROUP_VISIBILITY) {
+            string profile = "1";
+            if (message == "0") {
+                profile = message;
+            }
+            llOwnerSay("Sending bot group visibility request...");
+            CorradeAPI("group_visibility", [
+              "groupuuid", (string)trigger,
+              "profile", profile
+            ]);
+        } else if (num == LIST_GROUPS_UUID) {
+            llOwnerSay("Sending bot list groups by uuid request...");
+            CorradeAPI("listgroups", [
+              "limit_uuid", (string)trigger
+            ]);
+        } else if (num == LIST_GROUPS_NAME) {
+            llOwnerSay("Sending bot list groups by name request...");
+            CorradeAPI("listgroups", [
+              "limit_name", message
+            ]);
+        } else if (num == GROUP_INFO) {
+            llOwnerSay("Sending bot group info request...");
+            CorradeAPI("group_info", [
+              "groupuuid", (string)trigger
+            ]);
+        } else if (num == LIST_GROUP_MEMBERS) {
+            llOwnerSay("Sending bot list group members request...");
+            CorradeAPI("get_group_members", [
+              "groupuuid", (string)trigger
+            ]);
+        // Inventory
+        } else if (num == TAKE_DELETE_OBJECT) {
+            llOwnerSay("Sending bot take or delete object request...");
+            CorradeAPI("inworld_prim_take", [
+              "uuid", (string)trigger,
+              "operation", message
+            ]);
+        } else if (num == LIST_OUTFITS) {
+            llOwnerSay("Sending bot list outfits request...");
+            CorradeAPI("get_outfits", [ ]);
+        } else if (num == GET_WORN_OUTFIT) {
+            llOwnerSay("Sending bot get worn outfit request...");
+            CorradeAPI("get_outfit", [ ]);
+        } else if (num == WEAR_OUTFIT) {
+            llOwnerSay("Sending bot wear outfit request...");
+            CorradeAPI("wear_outfit", [
+              "outfitname", message
+            ]);
+        } else if (num == INVENTORY_TO_OBJECT) {
+            llOwnerSay("Sending bot transfer inventory to object request...");
+            CorradeAPI("inventory_to_prim", [
+              "prim_uuid", (string)trigger,
+              "object_uuid", message
+            ]);
+        } else if (num == LIST_INVENTORY) {
+            llOwnerSay("Sending bot list inventory request...");
+            integer ext = stringToBoolean(message);
+            if (trigger == NULL_KEY) {
+                CorradeAPI("listinventory", [
+                  "extended", ext
+                ]);
+            } else {
+                CorradeAPI("listinventory", [
+                  "uuid", (string)trigger,
+                  "extended", ext
+                ]);
+            }
+        // Miscellaneous
+        } else if (num == ADJUST_HOVER_HEIGHT) {
+            llOwnerSay("Sending bot adjust hover height request...");
+            CorradeAPI("set_hoverheight", [
+              "height", (float)message
+            ]);
+        } else if (num == NOTECARD_DONE) {
+            llOwnerSay("Configuration notecard read...");
+            request_secure_url();
+        } else {
+            // TODO: which others did we not catch in this link_message event
+            // Remove when development completed
+            if (num > 250000) {
+              if ((num != BOT_SETUP_SUCCESS) && (num != BOT_SETUP_FAILED) &&
+                  (num != BOT_SETUP_RETRY) && (num != BOT_EVENT_LISTEN_SUCCESS) &&
+                  (num != BOT_EVENT_LISTEN_INVENTORY) && (num != BOT_EVENT_LISTEN_IM) &&
+                  (num != BOT_EVENT_LISTEN_LOCAL_CHAT) && (num != BOT_EVENT_LISTEN_MONEY) &&
+                  (num != BOT_COMMAND_FAILED) && (num != BOT_SETUP_DEBUG_SUCCESS) && (num != BOT_RESPONSE)) {
+                llOwnerSay("Unsupported API request: num=" + (string)num + ", message=" + message);
+              }
+            }
+        }
+    }
+
+}

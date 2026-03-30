@@ -1,0 +1,16 @@
+# Customize these with your Corrade bot name, group name, group password, and Corrade API URL
+# DO NOT surround the settings with single or double quotes
+#
+# Your Corrade bot name, replace <Bot Name> with your bot's name
+CORRADE_BOT_NAME = <Bot Name>
+# Your Corrade bot group name
+CORRADE_GROUP = <Corrade Bot Group Name>
+# Your Corrade bot group password
+CORRADE_PASSW = <Corrade Bot Group Password>
+# Your Corrade API URL
+CORRADE_API_URL = <https://your.corrade.url/botname>
+# Range, in meters, for range limited commands
+CORRADE_RANGE = 64
+# Uncomment the following line to enable debug output
+#DEBUG = TRUE
+END_SETTINGS
