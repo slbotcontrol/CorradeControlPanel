@@ -179,15 +179,18 @@ integer BOT_SETUP_RETRY             = 300002;   //
 // Corrade Control Panel Command & Control Bridge
 //////////////////////////////////////////////////
 
-string API_URL = "https://api.lifebots.cloud/api/bot.html";
-string API_KEY = "";
-string BOT_NAME = "";
-string BOT_SECRET = "";
+string CORRADE_API_URL = "";
+string CORRADE_BOT_NAME = "";
+string CORRADE_GROUP = "";
+string CORRADE_PASSW = "";
 
 string DEVICE_NAME = "";
-string LOGIN_SITON = "";
-
 string WEBHOOK_URL = "";
+
+// Corrade API handles region and position coordinates separately
+string REGION = "";
+string POSITION = "";
+
 key urlRequestId = NULL_KEY;
 key selfCheckRequestId = NULL_KEY;
 
@@ -199,12 +202,12 @@ key QueryID;
 
 key ControlPanelOwner = NULL_KEY;
 
+// Range in meters of limit actions
+integer CORRADE_RANGE = 64;
+
 // Corrade Control Panel sends events to LINK_SET by default
 // You can specify the exact link number of the prim to optimize performance
 integer LINK = LINK_SET;
-
-// Returned data type can be JSON or URLENCODE, default is JSON
-string DATATYPE = "JSON";
 
 // Whether to reset on change of object ownership, default is reset
 integer OWNERCHANGE_RESET = 1;
@@ -214,35 +217,24 @@ integer OWNERCHANGE_RESET = 1;
 integer OWNERSAY_RESULT = 0;
 
 // 0 = debug off, 1 = debug on
-integer LB_DEBUG = 0;
+integer CO_DEBUG = 0;
 
 // Send Corrade HTTP API commands
 CorradeAPI(string command, list params) {
 
     list query;
-    if (LB_DEBUG == 1) {
-        llSay(DEBUG_CHANNEL, "API_KEY = " + API_KEY);
-        llSay(DEBUG_CHANNEL, "BOT_NAME = " + BOT_NAME);
-        llSay(DEBUG_CHANNEL, "BOT_SECRET = " + BOT_SECRET);
-        llSay(DEBUG_CHANNEL, "DATATYPE = " + DATATYPE);
+    if (CO_DEBUG == 1) {
+        llSay(DEBUG_CHANNEL, "CORRADE_API_URL = " + CORRADE_API_URL);
+        llSay(DEBUG_CHANNEL, "CORRADE_BOT_NAME = " + CORRADE_BOT_NAME);
+        llSay(DEBUG_CHANNEL, "CORRADE_GROUP = " + CORRADE_GROUP);
+        llSay(DEBUG_CHANNEL, "CORRADE_PASSW = " + CORRADE_PASSW);
     }
     // Populate the query data
-    if (DATATYPE == "URLENCODE") {
-        query = [
-            "action="  + command,
-            "apikey="  + llEscapeURL(API_KEY),
-            "botname=" + llEscapeURL(BOT_NAME),
-            "secret="  + llEscapeURL(BOT_SECRET)
-        ];
-    } else {
-        query = [
-            "action="  + command,
-            "apikey="  + llEscapeURL(API_KEY),
-            "botname=" + llEscapeURL(BOT_NAME),
-            "secret="  + llEscapeURL(BOT_SECRET),
-            "dataType=json"
-        ];
-    }
+    query = [
+        "command="  + command,
+        "group="  + llEscapeURL(CORRADE_GROUP),
+        "password=" + llEscapeURL(CORRADE_PASSW)
+    ];
 
     integer i;
     for(i = 0; i<llGetListLength(params); i += 2) {
@@ -251,12 +243,23 @@ CorradeAPI(string command, list params) {
 
     string queryString = llDumpList2String(query, "&");
 
-    if (LB_DEBUG == 1) {
-        llSay(DEBUG_CHANNEL, "API_URL = " + API_URL);
+    if (CO_DEBUG == 1) {
+        llSay(DEBUG_CHANNEL, "CORRADE_API_URL = " + CORRADE_API_URL);
         llSay(DEBUG_CHANNEL, "queryString = " + queryString);
     }
  
-    llHTTPRequest(API_URL, [HTTP_METHOD,"POST"], queryString);
+    llHTTPRequest(CORRADE_API_URL, [HTTP_METHOD,"POST",HTTP_ACCEPT,"application/json"], queryString);
+}
+
+// Parse input message in the format Region/x/y/z and extract the region
+string get_region(string msg) {
+    return llList2String(llParseString2List(msg, ["/"], [""]), 0);
+}
+
+// Parse input message in the format Region/x/y/z and extract the position coordinates
+string get_position(string msg) {
+    list pos = llParseString2List(msg, ["/"], [""])
+    return "<" + llDumpList2String(llDeleteSubList(pos, 0, 0), "/") + ">";
 }
 
 // Function to convert a string to a boolean (case-insensitive, basic values)
@@ -274,9 +277,9 @@ integer stringToBoolean(string str) {
     }
 }
 
-api_key_not_set() {
-    llOwnerSay("ERROR: LB_API_KEY not set.");
-    llOwnerSay("Edit the Configuration notecard to set your Corrade API Key.");
+conf_not_set() {
+    llOwnerSay("ERROR: configuration parameters not set.");
+    llOwnerSay("Edit the Configuration notecard to set your Corrade settings.");
 }
  
 request_secure_url() {
@@ -357,9 +360,9 @@ default {
              QueryID = llGetNotecardLine(CONFIG_CARD, NotecardLine);
          }
          else {
-             if ((API_KEY == "") || (API_KEY == "your-api-key")) {
-                 api_key_not_set();
-                 // llSetScriptState(llGetScriptName(), FALSE);
+             if ((CORRADE_API_URL == "") || (CORRADE_PASSW == "") ||
+                 (CORRADE_GROUP == "") || (CORRADE_BOT_NAME == "")) {
+                 conf_not_set();
              } else {
                  llOwnerSay("Configuration notecard missing, using defaults.");
                  request_secure_url();
@@ -405,9 +408,9 @@ default {
             if ((NotecardDone == 0) && (data != EOF)) {
                 if (data == "END_SETTINGS") {
                     NotecardDone = 1;
-                    if ((API_KEY == "") || (API_KEY == "your-api-key")) {
-                        api_key_not_set();
-                        // llSetScriptState(llGetScriptName(), FALSE);
+                    if ((CORRADE_API_URL == "") || (CORRADE_PASSW == "") ||
+                        (CORRADE_GROUP == "") || (CORRADE_BOT_NAME == "")) {
+                        conf_not_set();
                     } else {
                         // Let everybody know we are done reading the Configuration notecard
                         llMessageLinked(LINK, NOTECARD_DONE, "", "");
@@ -418,39 +421,33 @@ default {
                     value = llStringTrim(llList2String(temp, 1), STRING_TRIM);
                     if ( value == "TRUE" ) value = "1";
                     if ( value == "FALSE" ) value = "0";
-                    if ( name == "LB_API_KEY" ) {
-                        if (LB_DEBUG == 1) {
-                          llSay(DEBUG_CHANNEL, "Setting API Key to " + value);
+                    if ( name == "CORRADE_BOT_NAME" ) {
+                        if (CO_DEBUG == 1) {
+                          llSay(DEBUG_CHANNEL, "Setting Corrade bot name to " + value);
                         }
-                        API_KEY = value;
-                    } else if ( name == "LB_SECRET" ) {
-                        if (LB_DEBUG == 1) {
-                          llSay(DEBUG_CHANNEL, "Setting Bot Secret to " + value);
+                        CORRADE_BOT_NAME = value;
+                    } else if ( name == "CORRADE_GROUP" ) {
+                        if (CO_DEBUG == 1) {
+                          llSay(DEBUG_CHANNEL, "Setting Bot group to " + value);
                         }
-                        BOT_SECRET = value;
-                    } else if ( name == "LB_BOT_NAME" ) {
-                        if (LB_DEBUG == 1) {
-                          llSay(DEBUG_CHANNEL, "Setting Bot Name to " + value);
+                        CORRADE_GROUP = value;
+                    } else if ( name == "CORRADE_PASSW" ) {
+                        if (CO_DEBUG == 1) {
+                          llSay(DEBUG_CHANNEL, "Setting Bot group password to " + value);
                         }
-                        BOT_NAME = value;
-                    } else if ( name == "LOGIN_SITON" ) {
-                        LOGIN_SITON = value;
-                    } else if ( name == "DATATYPE" ) {
-                        if ((value == "URLENCODE") || (value == "JSON")) {
-                            DATATYPE = value;
-                        } else if (value == "urlencode") {
-                            DATATYPE = "URLENCODE";
-                        } else if (value == "json") {
-                            DATATYPE = "JSON";
-                        } else {
-                            llOwnerSay("WARNING: unsupported DATATYPE " + value + " specified in Configuration");
+                        CORRADE_PASSW = value;
+                    } else if ( name == "CORRADE_API_URL" ) {
+                        if (CO_DEBUG == 1) {
+                          llSay(DEBUG_CHANNEL, "Setting Corrade API URL to " + value);
                         }
-                    } else if ( name == "OWNERCHANGE_RESET" ) {
-                        OWNERCHANGE_RESET = (integer)value;
-                    } else if ( name == "OWNERSAY_RESULT" ) {
-                        OWNERSAY_RESULT = (integer)value;
+                        CORRADE_API_URL = value;
+                    } else if ( name == "CORRADE_RANGE" ) {
+                        if (CO_DEBUG == 1) {
+                          llSay(DEBUG_CHANNEL, "Setting range limit to " + value);
+                        }
+                        CORRADE_RANGE = (integer)value;
                     } else if ( name == "DEBUG" ) {
-                        LB_DEBUG = (integer)value;
+                        CO_DEBUG = (integer)value;
                     }
                 }
                 NotecardLine++;
@@ -472,7 +469,7 @@ default {
         string object = "";
         string uuid = "";
 
-        if (LB_DEBUG == 1) {
+        if (CO_DEBUG == 1) {
           llSay(DEBUG_CHANNEL, "In http_request():");
           llSay(DEBUG_CHANNEL, llList2CSV([id, method, body]));
         }
@@ -481,7 +478,7 @@ default {
             throw_exception("Error while attempting to get a free URL for this device:\n \n" + body);
         } else if (method == URL_REQUEST_GRANTED) {
             WEBHOOK_URL = body;
-            if (LB_DEBUG == 1) {
+            if (CO_DEBUG == 1) {
                 llSay(DEBUG_CHANNEL, "In http_request URL request granted, Webook URL = " + WEBHOOK_URL);
             }
             // Check every 5 mins for dropped URL
@@ -529,7 +526,7 @@ default {
                 uuid = llJsonGetValue(body, ["sender_uuid"]);
                 llMessageLinked(LINK, BOT_EVENT_LISTEN_INVENTORY, name + ";" + object + ";" + message, (key)uuid);
             } else {
-                if (LB_DEBUG == 1) {
+                if (CO_DEBUG == 1) {
                     llSay(DEBUG_CHANNEL, "Uncaught:");
                     llSay(DEBUG_CHANNEL, llList2CSV([(string)id, method, body]));
                 }
@@ -550,7 +547,7 @@ default {
 
     http_response(key request_id, integer status, list metadata, string body)
     {
-        if (LB_DEBUG == 1) {
+        if (CO_DEBUG == 1) {
             llSay(DEBUG_CHANNEL, "In http_response():");
             llSay(DEBUG_CHANNEL, llList2CSV([request_id, status, body]));
         }
@@ -574,32 +571,17 @@ default {
             // Parse response for success or failure and process any events
             string result;
             string resulttext;
-            if (DATATYPE == "URLENCODE") {
-                if (llSubStringIndex(body, "result=OK") != -1) {
-                    llOwnerSay("✓ Command executed successfully");
-                    processJsonResult(resultToJson(body));
-                } else if (llSubStringIndex(body, "result=FAIL") != -1) {
-                    string jbod = resultToJson(body);
-                    result = llJsonGetValue(jbod, ["result"]);
-                    resulttext = llJsonGetValue(jbod, ["resulttext"]);
-                    llOwnerSay("✗ Command failed - check response");
-                    llMessageLinked(LINK, BOT_COMMAND_FAILED, result + "\n" + resulttext, NULL_KEY);
-                } else {
-                    llOwnerSay("✗ Unable to parse URLENCODE result: " + body);
-                }
+            result = llJsonGetValue(body, ["result"]);
+            if (result == "OK") {
+                llOwnerSay("✓ Command executed successfully");
+                processJsonResult(body);
+            } else if (llJsonGetValue( body, ["result"]) == "FAIL") {
+                resulttext = llJsonGetValue(body, ["resulttext"]);
+                llOwnerSay("✗ Command failed - check response");
+                llMessageLinked(LINK, BOT_COMMAND_FAILED, result + "\n" + resulttext, NULL_KEY);
             } else {
-                result = llJsonGetValue(body, ["result"]);
-                if (result == "OK") {
-                    llOwnerSay("✓ Command executed successfully");
-                    processJsonResult(body);
-                } else if (llJsonGetValue( body, ["result"]) == "FAIL") {
-                    resulttext = llJsonGetValue(body, ["resulttext"]);
-                    llOwnerSay("✗ Command failed - check response");
-                    llMessageLinked(LINK, BOT_COMMAND_FAILED, result + "\n" + resulttext, NULL_KEY);
-                } else {
-                    llOwnerSay("✗ Unable to parse JSON result body: " + body);
-                    llOwnerSay("✗ result: " + result);
-                }
+                llOwnerSay("✗ Unable to parse JSON result body: " + body);
+                llOwnerSay("✗ result: " + result);
             }
         } else {
             llOwnerSay("✗ HTTP Error: " + (string)status);
@@ -612,7 +594,7 @@ default {
 
     link_message(integer sender, integer num, string message, key trigger)
     {
-        if (LB_DEBUG == 1) {
+        if (CO_DEBUG == 1) {
           llSay(DEBUG_CHANNEL, "In link_message():");
           llSay(DEBUG_CHANNEL, llList2CSV([sender, num, message, trigger]));
           //llSay(DEBUG_CHANNEL, "API Num = " + (string)num);
@@ -621,27 +603,28 @@ default {
         }
         // Setup and startup
         if (num == BOT_SETUP_SETBOT) {
-            if (LB_DEBUG == 1) {
+            if (CO_DEBUG == 1) {
               llSay(DEBUG_CHANNEL, "Setting Bot Name to " + message);
             }
-            BOT_NAME = message;
-            if (LB_DEBUG == 1) {
+            CORRADE_BOT_NAME = message;
+            if (CO_DEBUG == 1) {
               llSay(DEBUG_CHANNEL, "Setting Bot Secret to " + (string)trigger);
             }
             BOT_SECRET = (string)trigger;
             // TODO: Check Bot status and send bot setup success/failure link message
             // Check_Bot_Status();
             // CorradeAPI("status", [ ]);
-            // llMessageLinked(LINK, BOT_SETUP_FAILED, BOT_NAME, trigger);
-            if ((API_KEY == "") || (API_KEY == "your-api-key")) {
+            // llMessageLinked(LINK, BOT_SETUP_FAILED, CORRADE_BOT_NAME, trigger);
+            if ((CORRADE_API_URL == "") || (CORRADE_PASSW == "") ||
+                (CORRADE_GROUP == "") || (CORRADE_BOT_NAME == "")) {
                 if (NotecardDone == 1) {
-                    api_key_not_set();
-                    llMessageLinked(LINK, BOT_SETUP_FAILED, BOT_NAME, trigger);
+                    conf_not_set();
+                    llMessageLinked(LINK, BOT_SETUP_FAILED, CORRADE_BOT_NAME, trigger);
                 } else {
-                    llMessageLinked(LINK, BOT_SETUP_RETRY, BOT_NAME, trigger);
+                    llMessageLinked(LINK, BOT_SETUP_RETRY, CORRADE_BOT_NAME, trigger);
                 }
             } else {
-                llMessageLinked(LINK, BOT_SETUP_SUCCESS, BOT_NAME, trigger);
+                llMessageLinked(LINK, BOT_SETUP_SUCCESS, CORRADE_BOT_NAME, trigger);
             }
         } else if (num == BOT_SETUP_SETLINK) {
             // TODO: validate this is a proper link number for the prim
@@ -666,19 +649,15 @@ default {
         // Device Settings
         } else if (num == BOT_SETUP_DEBUG) {
             if (message == "1") {
-                LB_DEBUG = 1;
+                CO_DEBUG = 1;
             } else {
-                LB_DEBUG = 0;
+                CO_DEBUG = 0;
             }
             llMessageLinked(LINK, BOT_SETUP_DEBUG_SUCCESS, "", "");
         } else if (num == BOT_SETUP_DEVICENAME) {
             DEVICE_NAME = message;
         } else if (num == BOT_SETUP_SETOPTIONS) {
-            if (message == "DATATYPE_JSON") {
-                DATATYPE = "JSON";
-            } else if (message == "DATATYPE_URLENCODE") {
-                DATATYPE = "URLENCODE";
-            } else if (message == "NO_OWNERCHANGE_RESET") {
+            if (message == "NO_OWNERCHANGE_RESET") {
                 OWNERCHANGE_RESET = 0;
             } else if (message == "OWNERCHANGE_RESET") {
                 OWNERCHANGE_RESET = 1;
@@ -755,21 +734,24 @@ default {
         } else if (num == BOT_SIT) {
             llOwnerSay("Sending bot sit request...");
             CorradeAPI("sit", [
-              "uuid", (string)trigger,
-              "save", message
+              "item", (string)trigger,
+              "range", (string)CORRADE_RANGE,
+              "deanimate", "True"
             ]);
         } else if (num == BOT_STAND) {
             llOwnerSay("Sending bot stand request...");
-            CorradeAPI("stand", [ ]);
+            CorradeAPI("stand", ["deanimate", "True"]);
         } else if (num == BOT_FLY) {
             llOwnerSay("Sending bot fly request...");
-            CorradeAPI("fly", [
-              "fly", message
-            ]);
+            CorradeAPI("fly", ["action", "start"]);
         } else if (num == BOT_TELEPORT) {
             llOwnerSay("Sending bot teleport request...");
+            REGION = get_region(message);
+            POSITION = get_position(message);
             CorradeAPI("teleport", [
-              "location", message
+              "entity", "region",
+              "region", REGION,
+              "position", POSITION
             ]);
         } else if (num == BOT_WALK) {
         // TODO: validate instruction is one of FORWARD, BACKWARD, LEFT, RIGHT, TURNLEFT, TURNRIGHT, FLY, or STOP
